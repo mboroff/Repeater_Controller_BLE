@@ -84,7 +84,7 @@ void DisplayDateAndTime()
   else {
      lcd.print(rtc.getDateStr(FORMAT_SHORT, FORMAT_MIDDLEENDIAN, '/'));
   }
-  
+ 
 
 }
 

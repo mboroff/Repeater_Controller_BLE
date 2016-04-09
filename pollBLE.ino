@@ -386,6 +386,9 @@ Serial.print("tempData = "); Serial.println(tempData);
 
 void sendDataToIphone() 
 {
+  if (firstTime == true) {
+      return;
+  }
 #ifdef BLEMONIOR
   sendDataCurrentFreeMem = freeRam();
   if (previousSendDataFreeMem != sendDataCurrentFreeMem) {

@@ -80,7 +80,9 @@ void getCTCSS()
   char tempCTCSSchar[6];
   sendReadcmd("TF?\r");
   get_UV3buff();
-  memcpy(radioCTCSS, UV3buff, 5);
+  for(int i= 0; i < 6;i++) {
+    radioCTCSS[i] = UV3buff[i + 5];
+  }
   radioCTCSSf = atof(radioCTCSS)/ 100;                     // convert read CTCSS
   for (int i = 0; i < 50; i++) {                          // look for match to set value of CTCSSctr
       memcpy(tempCTCSSchar, CTCSStable[i], 6);
@@ -94,7 +96,7 @@ void getCTCSS()
 #ifdef BLE
           tempIPbuf.toCharArray(iPhoneBuffer, 13);
          iPhoneBuffer[14] = '\0';
-         sendDataToIphone() ;     
+//         sendDataToIphone() ;     
 #endif
           CTCSSctr = i + 1;
           break;
@@ -121,4 +123,31 @@ void sendCTCSS()
    delay2k();
 }
 
+/*************************************
+ * primeCTSS
+ * 
+ */
+
+void primeCTSS()
+{
+      CTCSSctr = 21; 
+   if (currentDevice == 0) {
+       radioCTCSSf = atof(CTCSStable[CTCSSctr - 1]) * 100;
+       radioCTCSSi = radioCTCSSf;
+       sprintf(radioCTCSS, "%05i",radioCTCSSi);
+       sendStorecmd("TF", radioCTCSS);
+       currentDevice = 1;
+       sendStorecmd("TF", radioCTCSS);
+       currentDevice = 0;
+       } else {
+              radioCTCSSf = atof(CTCSStable[CTCSSctr - 1]) * 100;
+              radioCTCSSi = radioCTCSSf;
+              sprintf(radioCTCSS, "%05i",radioCTCSSi);
+              sendStorecmd("TF", radioCTCSS);
+              currentDevice = 0;
+              sendStorecmd("TF", radioCTCSS);
+              currentDevice = 1; 
+              }
+
+}
 

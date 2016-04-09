@@ -271,6 +271,8 @@ char txState[2] = "0";
 char UV3buff[32];
 char UV3volume[3];
 
+
+boolean firstTime = true;
 boolean keyEntered = false;
 boolean repeaterSwitch = true, buzzerEnabled = true;
 boolean tempSave = true;
@@ -586,12 +588,12 @@ Serial.print(F("Startup repeaterEnabled = ")); Serial.println(repeaterEnabled);
    txState[1] = '\0';
    txStatectr = atoi(txState);
 
-  delay(500);
- lcd.clear();     // clear the LCD
+  delay(3000);
+ //lcd.clear();     // clear the LCD
  
   getConfiginfo();   // get infor from the rs-uv3
   getFreq();
-  printFreq();
+ // printFreq();
 /*************************
  *   start the clock
  ***********************/
@@ -612,7 +614,6 @@ Serial.print(F("Startup repeaterEnabled = ")); Serial.println(repeaterEnabled);
 #ifdef DEBUG  
 Serial.println(F("end of setup"));  
 #endif
-
   }
 
 
@@ -623,7 +624,6 @@ Serial.println(F("end of setup"));
  *       Loop
 *************************************/
 void loop(){
-  
  t = rtc.getTime();                // get the time
   myMonth = t.mon;
   myMonthDay = t.date;
@@ -636,6 +636,19 @@ void loop(){
   if (prevSecond != mySecond) {      // check for a new second
       prevSecond = mySecond;
       DisplayDateAndTime();
+      if (firstTime == true) {
+              firstTime = false; 
+              lcd.clear();              // on return clear the lcd and get info fro rs-uv3
+              getFreq();
+              delay(4000);
+              getFreq();
+              printFreq();
+              memcpy(iPhoneBuffer, txtDone, 5);
+              sendDataToIphone();
+              getCTCSS();
+           }
+
+
 #ifdef BLEMONIOR       
       loopCurrentFreeMem = freeRam();
       currentFunction = "loop == ";
@@ -692,7 +705,7 @@ if (timeToPollBLE == true) {
         getConfiginfo();
         getFreq();
         printFreq();
-        }
+         }
 
     else if (key == txtA) {               // Did user change/refresh device A
         currentDevice = 0;

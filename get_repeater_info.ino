@@ -536,6 +536,7 @@ Serial.println("Getting sys info");
   #ifdef BLE
      else {  
           getCTCSS();
+         
           lcd.createChar(1, fullBar);
           for (i = 0; i < 17; i++) {     
               lcd.setCursor(i,3); 
