@@ -35,6 +35,7 @@
      19) - Set DTMF
      Bluetooth edition
      Removed receive band check
+     added 10 minute id See variable timerIdUnit for A or B unit
  
 *********************************************************************/
    
@@ -217,6 +218,7 @@ int keyIndex = 0;
 int keySwitch = 0;
 int inputCtr = 0, CTCSSctr = 1, idTimer = 0, hangTimer = 0;
 int menuSwitch = 0,  menuSelect = 1, currentDevice = 0;
+int timerIdUnit = 1;      // device B for timer Id
 int radioCTCSSi;
 int fanEnabled = relayOn, repeaterEnabled = relayOn;
 int returnCode;
@@ -246,6 +248,10 @@ int previousGetuv3buffFreeMem = 0;
 int currentGetuv3buffFreeMem = 0;
 
 float radioCTCSSf;
+
+#define TIMETOSENDCALLSIGN  600000      // Amount of time to wait (in milliseconds) to send call sign
+unsigned long idTime;
+
 char callSignbuffer[21];
 char currentKey[2];
 char dataFld[32];
@@ -610,6 +616,7 @@ Serial.print(F("Startup repeaterEnabled = ")); Serial.println(repeaterEnabled);
   
  utcOffset = EEPROM.read(utcoffsetAddr);
  localOffset = EEPROM.read(localoffsetAddr);
+ idTime = millis();
 
 #ifdef DEBUG  
 Serial.println(F("end of setup"));  
@@ -632,15 +639,24 @@ void loop(){
   myMinute = t.min;
   mySecond = t.sec;                 // get the second
   
+  if (millis() - idTime > TIMETOSENDCALLSIGN) {
+     int saveDevice = currentDevice;
+     currentDevice = timerIdUnit;
+     getCallsign();
+     sendDatacmd("CT", radioCallsign);
+     currentDevice = saveDevice;
+     idTime = millis();
+     }
+
 
   if (prevSecond != mySecond) {      // check for a new second
       prevSecond = mySecond;
       DisplayDateAndTime();
       if (firstTime == true) {
               firstTime = false; 
-              lcd.clear();              // on return clear the lcd and get info fro rs-uv3
               getFreq();
               delay(4000);
+              lcd.clear();              // on return clear the lcd and get info fro rs-uv3
               getFreq();
               printFreq();
               memcpy(iPhoneBuffer, txtDone, 5);
