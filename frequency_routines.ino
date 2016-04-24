@@ -42,7 +42,6 @@ void setFreq()
         lcd.print(txtSpace20);
       }
       else if (key == txtHashTag) {                // cancel key
-        lcd.clear();
         menuSwitch = 1;
         break;
       }
@@ -77,32 +76,27 @@ void setFreq()
               if (buzzerEnabled == true) {
                 beep();
               }
-
-              lcd.setCursor(4, 2);
-              showFreq();
-              if (freqSwitch == 1) {                 // if processing recv
-                memcpy (recvFreq, inputFld, 6);
-                memcpy (UV3buff, inputFld, 6);
-                UV3buff[6] = txtNull;
-                lcd.setCursor(4, 2);
-                currentFrequency = atol(recvFreq);
-                sendRecvStringToUV3();
-                } else {          // if processing xmit
-                memcpy (xmitFreq, inputFld, 6);
-                memcpy (UV3buff, inputFld, 6);
-                UV3buff[6] = txtNull;
-                lcd.setCursor(4, 2);
-                currentFrequency = atol(recvFreq);
-                sendXmitStringToUV3();
-              }
-              delay200();
               lcd.setCursor(0, 3);
               lcd.print(F("Freq saved"));
-              delay2k();
-              menuSwitch = 1;
-              break;
-            }                                    // end of in band
 
+              lcd.setCursor(4, 2);
+              if (freqSwitch == 1) {                 // if processing recv
+                  memcpy (recvFreq, inputFld, 6);
+                  memcpy (UV3buff, inputFld, 6);
+                  UV3buff[6] = txtNull;
+                  currentFrequency = atol(recvFreq);
+                  sendRecvStringToUV3();
+                  } else {          // if processing xmit
+                          memcpy (xmitFreq, inputFld, 6);
+                          memcpy (UV3buff, inputFld, 6);
+                         UV3buff[6] = txtNull;
+                         currentFrequency = atol(recvFreq);
+                         sendXmitStringToUV3();
+                         }
+              delay1k();
+            } // end of in band
+            menuSwitch = 1;
+            break;
           }                 // end of counter = 6
         }            // end of input key
       } // end  of not * or #
@@ -115,16 +109,19 @@ void setFreq()
  ****************************/
 void getFreq()
 {
-#ifdef DEBUG
-  Serial.println(F("get frequency"));
-#endif
-  sendReadcmd("F?\r");
-  get_UV3buff();
 
+  sendReadcmd("F?\r");
+
+ for (int i = 0; i < 5; i++){
+  get_UV3buff();
+ }
+  
+ // Serial.print(F("UV3buff = ")); Serial.println(UV3buff);
   for (int i = 0; i < 6; i++) {
     recvFreq[i] = UV3buff[6 + i];
     xmitFreq[i] = UV3buff[20 + i];
   }
+
 }
 
 /****************************************

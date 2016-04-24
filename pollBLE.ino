@@ -473,6 +473,10 @@ void processHelloUV3()
       // send the status to the iPhone             
       sendDataToIphone();          
       getradioTemp();
+      getradioTemp();
+      getFreq();
+      getFreq();
+      getFreq();
       getFreq();
       printFreq();
       sendDataToIphone();

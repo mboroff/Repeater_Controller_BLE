@@ -6,20 +6,10 @@
  * get_UV3buff
  */
 byte get_UV3buff(){
-#ifdef BLEMONIOR
-  currentGetuv3buffFreeMem = freeRam();
-  if (previousGetuv3buffFreeMem != currentGetuv3buffFreeMem) {
-      previousGetuv3buffFreeMem = currentGetuv3buffFreeMem;
-     currentFunction = "get_UV3buff()";
-     Serial.print(currentFunction); Serial.print(" ");
-     Serial.print(localHour); Serial.print(":"); Serial.print(myMinute); Serial.print(":"); Serial.print(mySecond);
-     Serial.print(" freeRam = "); Serial.println(currentGetuv3buffFreeMem);
-    }
-#endif
   
-  for (int i= 0; i < 32; i++) {       // clear UV3buff
-       UV3buff[i] = txtNull;
-  }
+//  for (int i= 0; i < 32; i++) {       // clear UV3buff
+//       UV3buff[i] = txtNull;
+ // }
   byte k = 0;
   long T = millis() + 100;
   char c = 0;
@@ -35,19 +25,12 @@ byte get_UV3buff(){
   while ((millis() < T) && (c != '\r')){   // while data in the serial buffer
     if(Serial2.available()){            
       c = Serial2.read();                 // read a character
-#ifdef DEBUGC      
-Serial.println(c);
-#endif
       UV3buff[k++] = c;
       if (c == '\r') UV3buff[--k] = 0;
     }
   }
  }
 
-  
-#ifdef DEBUG 
-Serial.print(F("UV3buff = ")); Serial.println(UV3buff);
-#endif
   if (c == 13){
     return 1;
   }
@@ -86,7 +69,10 @@ void getradioTemp()
 #ifdef DEBUG
   Serial.println(F("Get radio temp"));
 #endif  
- 
+
+ memcpy(UV3buff, txtSpace20, 20);
+  sendReadcmd("TP?\r");
+/*
  if (currentDevice == 0) {
      Serial3.write('\r');
      Serial3.print("TP\r");
@@ -96,10 +82,9 @@ void getradioTemp()
      Serial2.print("TP\r");
  
  }
- 
- delay200();
+  */
+  delay200();
   get_UV3buff();
-/*
   memcpy(iPhoneBuffer, txtRadioTemp, 7);
   for (int i = 0; i < 3; i++) {
        if (UV3buff[i + 6] == 0x00) {
@@ -113,8 +98,8 @@ void getradioTemp()
       iPhoneBuffer[8] = 'C';  
   }
     
- //     sendDataToIphone();
-*/
+  sendDataToIphone();
+
 }
 
 /********************************
@@ -125,6 +110,7 @@ void flushBuffers()
 {
   Serial3.flush();
   Serial2.flush();
+  delay200();
 }
 
 /***************************
@@ -136,9 +122,6 @@ void sendReadcmd(char* cmd)
 Serial.print(F("sendReadcmd ")); Serial.println(cmd);
 Serial.print(F("currentDevice = ")); Serial.println(currentDevice);  
 #endif
-  for (int i = 0; i <32 ; i++) {
-       UV3buff[i] = txtNull;       //clear the buff
-       }
   flushBuffers();
   if (currentDevice == 0) {
       Serial3.write('\r');
@@ -266,9 +249,9 @@ void delay4k()
 ************************************/
  void sendRecvStringToUV3() 
  {
-// #ifdef DEBUG
+#ifdef DEBUG
    Serial.println("sendRecv");
-//#endif
+#endif
     if (currentDevice == 0) {    // check device
          Serial3.write('\r');
          Serial3.print("FR");

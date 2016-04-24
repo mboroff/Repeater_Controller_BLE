@@ -102,6 +102,7 @@ void getVolume()
        if (UV3buff[i + 4] == ' ' || UV3buff[i + 4] == '\0'){
            UV3buff[i + 4] = '0';
            }
+           UV3volume[i] = UV3buff[i +4];
         }
 #ifdef BLE
           copyUV3buffToIphoneBuffer();

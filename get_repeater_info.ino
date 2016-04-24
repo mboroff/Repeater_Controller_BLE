@@ -380,16 +380,7 @@ Serial.println("Getting sys info");
   } 
 #ifdef BLE
      else {  
-          char tempCmd[10] = "HT       ";
-          for (int i = 0; i < 4; i++ ) {
-               if (UV3buff[i + 1] == '\0' || UV3buff[i + 1] == ' ' ) {
-                   tempCmd[i + 3] = '0';
-                   } else {
-                          tempCmd[i + 3] = UV3buff[i + 1];
-                          }
-               tempCmd[i + 4] = '\0';
-              }
-           memcpy(iPhoneBuffer, tempCmd, 9);
+           memcpy(iPhoneBuffer, UV3buff, 10);
            sendDataToIphone();
             } 
 #endif   
@@ -535,7 +526,8 @@ Serial.println("Getting sys info");
   } 
   #ifdef BLE
      else {  
-          getCTCSS();
+          copyUV3buffToIphoneBuffer();
+          sendDataToIphone();
          
           lcd.createChar(1, fullBar);
           for (i = 0; i < 17; i++) {     
@@ -679,6 +671,53 @@ Serial.println("Getting sys info");
           delay1k();
           }
 #endif
+
+  sendReadcmd("VL?\r");
+  get_UV3buff();
+  if (getRepeaterInfoForiPhone == false) {  
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(F("VOX Sensitivity"));
+      lcd.setCursor(0, 1);
+      lcd.print(UV3buff);
+      delay2k();
+      lcd.clear();
+  } 
+#ifdef BLE  
+     else {  
+          copyUV3buffToIphoneBuffer();
+          sendDataToIphone();
+          for (i = 0; i < 19; i++) {     
+              lcd.setCursor(i,3); 
+              lcd.write( 1 );
+          }
+  }
+#endif  
+
+
+  
+  sendReadcmd("VX?\r");
+  get_UV3buff();
+  if (getRepeaterInfoForiPhone == false) {  
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print(F("VOX State"));
+      lcd.setCursor(0, 1);
+      lcd.print(UV3buff);
+      delay2k();
+      lcd.clear();
+  } 
+#ifdef BLE  
+     else {  
+          copyUV3buffToIphoneBuffer();
+          sendDataToIphone();
+          for (i = 0; i < 19; i++) {     
+              lcd.setCursor(i,3); 
+              lcd.write( 1 );
+          }
+  }
+#endif  
+
 }
 
 void copyUV3buffToIphoneBuffer()

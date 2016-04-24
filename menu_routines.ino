@@ -33,8 +33,7 @@ void mainMenu()
                }
                else if (key == txtStar ) {     // user confirmed with a * key
                     processMenu();
-                    lcd.clear();
-                    break;
+                     break;
                     }
               else if (key == txtA) {              // increment function number
                        menuSelect++;                // bump the menu number
@@ -190,11 +189,14 @@ void processMenu()
           toggleDTFM();
           break;
           
+          case 20:         // Set Code Speed
+          setCodeSpeed();
+          break;
+          
          default:
            break;   
   
         }
-     lcd.clear();
      menuSwitch = 1;          // ensure stop while loop compare and main menu returns to loop
 
 }

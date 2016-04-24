@@ -1,4 +1,4 @@
-              /*********************************************************************
+ /*********************************************************************
  * UV-RS3 Repeater Controller
  * We invest time and resources providing this open source code, 
   please support them and open-source hardware by purchasing 
@@ -36,6 +36,7 @@
      Bluetooth edition
      Removed receive band check
      added 10 minute id See variable timerIdUnit for A or B unit
+     20) Set Code Speed     
  
 *********************************************************************/
    
@@ -217,6 +218,7 @@ int freqSwitch = 0, CTCSSswitch = 0;
 int keyIndex = 0;
 int keySwitch = 0;
 int inputCtr = 0, CTCSSctr = 1, idTimer = 0, hangTimer = 0;
+int codeSpeed = 0;
 int menuSwitch = 0,  menuSelect = 1, currentDevice = 0;
 int timerIdUnit = 1;      // device B for timer Id
 int radioCTCSSi;
@@ -250,7 +252,8 @@ int currentGetuv3buffFreeMem = 0;
 float radioCTCSSf;
 
 #define TIMETOSENDCALLSIGN  600000      // Amount of time to wait (in milliseconds) to send call sign
-unsigned long idTime;
+#define TIMETOCHECKTEMPERATURE 30000
+unsigned long idTime, temperatureTime;
 
 char callSignbuffer[21];
 char currentKey[2];
@@ -271,6 +274,7 @@ char squelchLevel[2] = " ";
 char temp[17];
 char tempIDtimer[4];
 char tempHangtimer[5];
+char tempCodeSpeed[3];
 char timeOuttime[4] = "000";
 char toneMode[5];
 char txState[2] = "0";
@@ -372,7 +376,7 @@ byte fullBar[8] = {  B11111,  B11111,  B11111,  B11111,  B11111,  B11111,  B1111
 /***********************************
  *    Function menu titles
 ***********************************/
-#define MAXFUNCTIONS 19
+#define MAXFUNCTIONS 20
 #define MAXITEMSIZE 20
 char functionLabels[MAXFUNCTIONS][MAXITEMSIZE] = 
        { "Set Rx Freq        ", "Set Tx Freq        ", 
@@ -384,7 +388,7 @@ char functionLabels[MAXFUNCTIONS][MAXITEMSIZE] =
          "Set Call Sign      ", "Transmit Call Sign ",
          "Set Hang Timer     ", "Set ID Timer       ",
          "Set Time Out Timer ", "Toggle Transmitter ",
-         "Toggle DTFM Detect "
+         "Toggle DTFM Detect ", "Set Code Speed     "
          };
 /***********************************
  *      Tones Table
@@ -546,7 +550,7 @@ void setup(){
   lcd.setCursor(0, 1);
   lcd.print("Repeater Controller");
   lcd.setCursor(0,2);
-  lcd.print(F("03/06/2016  Rel 3.0"));
+  lcd.print(F("04/23/2016  Rel 3.1"));
   delay(3000);
  
 /******************************************
@@ -595,11 +599,7 @@ Serial.print(F("Startup repeaterEnabled = ")); Serial.println(repeaterEnabled);
    txStatectr = atoi(txState);
 
   delay(3000);
- //lcd.clear();     // clear the LCD
  
-  getConfiginfo();   // get infor from the rs-uv3
-  getFreq();
- // printFreq();
 /*************************
  *   start the clock
  ***********************/
@@ -617,7 +617,8 @@ Serial.print(F("Startup repeaterEnabled = ")); Serial.println(repeaterEnabled);
  utcOffset = EEPROM.read(utcoffsetAddr);
  localOffset = EEPROM.read(localoffsetAddr);
  idTime = millis();
-
+ temperatureTime =  millis();
+  getFreq();
 #ifdef DEBUG  
 Serial.println(F("end of setup"));  
 #endif
@@ -648,15 +649,33 @@ void loop(){
      idTime = millis();
      }
 
+  if (millis() - temperatureTime > TIMETOCHECKTEMPERATURE) {
+     int tempDevice = currentDevice;
+     currentDevice = 0;
+     getradioTemp();
+     lcd.setCursor(16, 1);
+     lcd.print(radioTemp);
+     currentDevice = tempDevice;
+     char tempTemp[3];
+     memcpy(tempTemp, radioTemp, 2);
+     tempTemp[2] = '\0';
+     int tempTemperaturec = atoi(tempTemp);
+ //    Serial.print("tempTemperaturec = "); Serial.println(tempTemperaturec);
+     if (tempTemperaturec > 55) {
+              digitalWrite(FANPIN, LOW);          // turn the relay on  
+     } else if (tempTemperaturec < 46) {
+      digitalWrite(FANPIN, HIGH);          // turn the relay off        
+     }
+     temperatureTime = millis();
+  }
 
   if (prevSecond != mySecond) {      // check for a new second
       prevSecond = mySecond;
       DisplayDateAndTime();
       if (firstTime == true) {
               firstTime = false; 
-              getFreq();
-              delay(4000);
               lcd.clear();              // on return clear the lcd and get info fro rs-uv3
+              getradioTemp();
               getFreq();
               printFreq();
               memcpy(iPhoneBuffer, txtDone, 5);
@@ -717,9 +736,8 @@ if (timeToPollBLE == true) {
         }
     if (key == txtStar) {               // Did user activate function menu
         mainMenu();               // process the menu request
+        delay2k();
         lcd.clear();              // on return clear the lcd and get info fro rs-uv3
-        getConfiginfo();
-        getFreq();
         printFreq();
          }
 
@@ -733,9 +751,10 @@ Serial.println(repeaterEnabled);
 #ifdef BLE
        memcpy (iPhoneBuffer, unitA, 6);
        sendDataToIphone(); 
-        getConfiginfo();
+        firstTime = true;
         getFreq();
-        printFreq();
+        getradioTemp();
+        getCTCSS();
         processHelloUV3();
         for (int i = 0; i < 20; i++) {  
              lcd.setCursor(i,3); 
@@ -756,9 +775,10 @@ Serial.println(repeaterEnabled);
 #ifdef BLE
        memcpy (iPhoneBuffer, unitB, 6);
        sendDataToIphone(); 
-       getConfiginfo();
+      firstTime = true;
        getFreq();
-       printFreq();
+       getradioTemp();
+       getCTCSS();
        processHelloUV3();
        for (int i = 0; i < 20; i++) {  
            lcd.setCursor(i,3); 

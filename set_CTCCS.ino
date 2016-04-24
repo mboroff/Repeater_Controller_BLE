@@ -14,6 +14,7 @@ void setCTCSS()
   lcd.clear();                               // cear the diaplay
   lcd.setCursor(0, 0);
   lcd.print(functionLabels[menuSelect-1]);          // print the function title
+  getCTCSS();                    
   printCTCSS();                              // print the current CTCSS setting
   menuSwitch = 0;                            // esure the loop runs
 
@@ -79,10 +80,22 @@ void getCTCSS()
 #endif  
   char tempCTCSSchar[6];
   sendReadcmd("TF?\r");
+  delay500();
   get_UV3buff();
+
+  sendReadcmd("TF?\r");
+  delay500();
+  get_UV3buff();
+
+  sendReadcmd("TF?\r");
+  delay500();  
+  get_UV3buff();
+//Serial.print("UV3buff = "); Serial.println(UV3buff);
+  
   for(int i= 0; i < 6;i++) {
-    radioCTCSS[i] = UV3buff[i + 5];
+    radioCTCSS[i] = UV3buff[i + 4];
   }
+//  Serial.print("radioCTCSS = "); Serial.println(radioCTCSS);
   radioCTCSSf = atof(radioCTCSS)/ 100;                     // convert read CTCSS
   for (int i = 0; i < 50; i++) {                          // look for match to set value of CTCSSctr
       memcpy(tempCTCSSchar, CTCSStable[i], 6);
@@ -94,9 +107,9 @@ void getCTCSS()
               tempIPbuf += tempCTCSSchar[j];
          }
 #ifdef BLE
-          tempIPbuf.toCharArray(iPhoneBuffer, 13);
+         tempIPbuf.toCharArray(iPhoneBuffer, 13);
          iPhoneBuffer[14] = '\0';
-//         sendDataToIphone() ;     
+         sendDataToIphone() ;     
 #endif
           CTCSSctr = i + 1;
           break;
@@ -123,31 +136,4 @@ void sendCTCSS()
    delay2k();
 }
 
-/*************************************
- * primeCTSS
- * 
- */
-
-void primeCTSS()
-{
-      CTCSSctr = 21; 
-   if (currentDevice == 0) {
-       radioCTCSSf = atof(CTCSStable[CTCSSctr - 1]) * 100;
-       radioCTCSSi = radioCTCSSf;
-       sprintf(radioCTCSS, "%05i",radioCTCSSi);
-       sendStorecmd("TF", radioCTCSS);
-       currentDevice = 1;
-       sendStorecmd("TF", radioCTCSS);
-       currentDevice = 0;
-       } else {
-              radioCTCSSf = atof(CTCSStable[CTCSSctr - 1]) * 100;
-              radioCTCSSi = radioCTCSSf;
-              sprintf(radioCTCSS, "%05i",radioCTCSSi);
-              sendStorecmd("TF", radioCTCSS);
-              currentDevice = 0;
-              sendStorecmd("TF", radioCTCSS);
-              currentDevice = 1; 
-              }
-
-}
 
