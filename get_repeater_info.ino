@@ -589,21 +589,15 @@ Serial.println("Getting sys info");
       delay2k();
   } 
 #ifdef BLE
-      else {        
-          char tempTOtimer[4] = "   ";          
-          char tempCmd[8] = "TO     ";
-          for (int i = 0; i < 3; i ++) {
-              if (UV3buff[i + 2] == '\0' || UV3buff[i + 2] == ' ') {
-                   tempCmd[i + 3] = '0';
-                   } else {
-                           tempCmd[i + 3] = UV3buff[i + 2];
-                          }
-                  tempCmd[i + 4] = '\0';
-                  }
-          memcpy(iPhoneBuffer, tempCmd, 8);
-           sendDataToIphone();
+      else {  
+          copyUV3buffToIphoneBuffer();
+          sendDataToIphone();
+          for (i = 0; i < 18; i++) {     
+              lcd.setCursor(i,3); 
+              lcd.write( 1 );
+          }
   }
-#endif  
+  #endif  
   sendReadcmd("TP?\r");
   get_UV3buff();
   if (getRepeaterInfoForiPhone == false) {  
